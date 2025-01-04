@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+
+// Importação de módulos necessários
+var app = require('../app');
+var debug = require('debug')('websocket:server');
+var http = require('http');
+const webSocketController = require('../controller/websocketController');
+
+// Obtém a porta do ambiente e configura no Express
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+// Cria o servidor HTTP
+var server = http.createServer(app);
+webSocketController.webSocketController(server);
+
+// Inicia o servidor na porta configurada e define os listeners de eventos
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+// Função para normalizar a porta
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    return val; // Se não for número, é um nome de pipe
+  }
+
+  if (port >= 0) {
+    return port; // Retorna a porta numérica
+  }
+
+  return false; // Se não for uma porta válida, retorna false
+}
+
+// Listener para o evento de erro no servidor HTTP
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
+
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requer privilégios elevados');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' já está em uso');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+// Listener para o evento de "listening" no servidor HTTP
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
+  debug('Escutando em ' + bind);
+}
