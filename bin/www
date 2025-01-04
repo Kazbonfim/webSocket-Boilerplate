@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
+
+
 // Importação de módulos necessários
 var app = require('../app');
 var debug = require('debug')('websocket:server');
 var http = require('http');
 const webSocketController = require('../controller/websocketController');
+const eventMessages = require('../events/msgAlert.json');
 
 // Obtém a porta do ambiente e configura no Express
 var port = normalizePort(process.env.PORT || '3000');
@@ -12,7 +15,20 @@ app.set('port', port);
 
 // Cria o servidor HTTP
 var server = http.createServer(app);
-webSocketController.webSocketController(server);
+
+// Configura o WebSocket uma vez
+const wss = webSocketController.webSocketController(server);
+
+// Envia uma mensagem global a cada 1min
+setInterval(() => {
+  // Valor randomico, entre 1 e 10
+  let number = Math.floor(Math.random() * 10 + 1);
+
+  // Mensagem a ser enviada
+  const message = `${eventMessages[`message${number}`]} Número aleatório: ${number}`;
+  webSocketController.broadcast(wss, message); // Usando a instância correta
+}, 10000);
+
 
 // Inicia o servidor na porta configurada e define os listeners de eventos
 server.listen(port);
